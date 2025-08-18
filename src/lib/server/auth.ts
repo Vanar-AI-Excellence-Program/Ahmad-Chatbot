@@ -7,13 +7,7 @@ import { db } from '$lib/server/db/index.js';
 import { users, sessions } from '$lib/server/db/schema.js';
 import { eq } from 'drizzle-orm';
 import bcrypt from 'bcryptjs';
-import {
-	AUTH_SECRET,
-	GOOGLE_CLIENT_ID,
-	GOOGLE_CLIENT_SECRET,
-	GITHUB_CLIENT_ID,
-	GITHUB_CLIENT_SECRET
-} from '$env/static/private';
+import { env as privateEnv } from '$env/dynamic/private';
 import type { Session, User, Account } from '@auth/core/types';
 import { customAdapter } from './custom-adapter.js';
 
@@ -37,13 +31,13 @@ export const authOptions = {
 	adapter: customAdapter,
 	providers: [
 		GoogleProvider({
-			clientId: GOOGLE_CLIENT_ID!,
-			clientSecret: GOOGLE_CLIENT_SECRET!,
+			clientId: privateEnv.GOOGLE_CLIENT_ID!,
+			clientSecret: privateEnv.GOOGLE_CLIENT_SECRET!,
 			allowDangerousEmailAccountLinking: true
 		}),
 		GitHubProvider({
-			clientId: GITHUB_CLIENT_ID!,
-			clientSecret: GITHUB_CLIENT_SECRET!,
+			clientId: privateEnv.GITHUB_CLIENT_ID!,
+			clientSecret: privateEnv.GITHUB_CLIENT_SECRET!,
 			allowDangerousEmailAccountLinking: true
 		}),
 		CredentialsProvider({
@@ -184,7 +178,7 @@ export const authOptions = {
 		}
 	},
 	debug: true,
-	secret: AUTH_SECRET
+	secret: privateEnv.AUTH_SECRET
 };
 
 export const { handle, signIn, signOut } = SvelteKitAuth(authOptions);
