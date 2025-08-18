@@ -2,6 +2,10 @@
 
 A modern authentication application built with SvelteKit, Auth.js, and PostgreSQL.
 
+## CI Status
+
+[![CI](https://github.com/Vanar-AI-Excellence-Program/Ahmad-Chatbot/workflows/CI/badge.svg)](https://github.com/Vanar-AI-Excellence-Program/Ahmad-Chatbot/actions)
+
 ## QUICK SETUP
 
 1. **git clone** https://github.com/Vanar-AI-Excellence-Program/Ahmad-Chatbot.git
