@@ -5,11 +5,13 @@ This guide will help you set up Google and GitHub OAuth for your SvelteKit authe
 ## 🔐 Google OAuth Setup
 
 ### 1. Create Google Cloud Project
+
 1. Go to [Google Cloud Console](https://console.cloud.google.com/)
 2. Create a new project or select an existing one
 3. Enable the Google+ API
 
 ### 2. Configure OAuth Consent Screen
+
 1. Go to **APIs & Services** → **OAuth consent screen**
 2. Choose **External** user type
 3. Fill in the required information:
@@ -20,6 +22,7 @@ This guide will help you set up Google and GitHub OAuth for your SvelteKit authe
 5. Add test users (your email)
 
 ### 3. Create OAuth Credentials
+
 1. Go to **APIs & Services** → **Credentials**
 2. Click **Create Credentials** → **OAuth client ID**
 3. Choose **Web application**
@@ -29,7 +32,9 @@ This guide will help you set up Google and GitHub OAuth for your SvelteKit authe
 5. Copy the **Client ID** and **Client Secret**
 
 ### 4. Update Environment Variables
+
 Add to your `.env` file:
+
 ```env
 GOOGLE_CLIENT_ID=your-google-client-id
 GOOGLE_CLIENT_SECRET=your-google-client-secret
@@ -38,6 +43,7 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 ## 🐙 GitHub OAuth Setup
 
 ### 1. Create GitHub OAuth App
+
 1. Go to [GitHub Settings](https://github.com/settings/developers)
 2. Click **New OAuth App**
 3. Fill in the details:
@@ -48,7 +54,9 @@ GOOGLE_CLIENT_SECRET=your-google-client-secret
 5. Copy the **Client ID** and **Client Secret**
 
 ### 2. Update Environment Variables
+
 Add to your `.env` file:
+
 ```env
 GITHUB_CLIENT_ID=your-github-client-id
 GITHUB_CLIENT_SECRET=your-github-client-secret
@@ -57,6 +65,7 @@ GITHUB_CLIENT_SECRET=your-github-client-secret
 ## 🚀 Testing OAuth
 
 ### Development Testing
+
 1. Start your development server: `npm run dev`
 2. Visit `http://localhost:5173/login`
 3. Click "Continue with Google" or "Continue with GitHub"
@@ -66,11 +75,13 @@ GITHUB_CLIENT_SECRET=your-github-client-secret
 ### Common Issues
 
 **Google OAuth Issues:**
+
 - **"redirect_uri_mismatch"**: Check that your redirect URI exactly matches what's configured in Google Cloud Console
 - **"invalid_client"**: Verify your Client ID and Client Secret are correct
 - **"access_denied"**: Make sure you've added your email as a test user
 
 **GitHub OAuth Issues:**
+
 - **"redirect_uri_mismatch"**: Check that your callback URL matches exactly
 - **"bad_verification_code"**: Usually means the Client Secret is incorrect
 
@@ -114,6 +125,7 @@ When deploying to production:
 ## 🎯 Features
 
 With OAuth configured, users can:
+
 - ✅ Sign in with Google
 - ✅ Sign in with GitHub
 - ✅ Sign in with email/password
@@ -124,18 +136,21 @@ With OAuth configured, users can:
 ## 🔍 Troubleshooting
 
 ### Check OAuth Configuration
+
 1. Verify all environment variables are set
 2. Check redirect URIs match exactly
 3. Ensure OAuth apps are properly configured
 4. Test with different browsers
 
 ### Debug OAuth Flow
+
 1. Check browser console for errors
 2. Verify network requests in DevTools
 3. Check server logs for OAuth errors
 4. Test with incognito/private browsing
 
 ### Common Error Messages
+
 - `"invalid_client"`: Check Client ID/Secret
 - `"redirect_uri_mismatch"`: Verify redirect URIs
 - `"access_denied"`: Check OAuth app permissions

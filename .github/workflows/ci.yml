@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, feature/* ]
+    branches: [main, feature/*]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   test:
@@ -15,34 +15,34 @@ jobs:
         node-version: [18.x, 20.x]
 
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v4
-      with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    
-    - name: Install dependencies
-      run: npm ci
-    
-    - name: Check formatting
-      run: npm run format
-    
-    - name: Run linting and type checking
-      run: npm run lint
-    
-    - name: Build project
-      run: npm run build
-      env:
-        # Use dummy values for CI - these won't be used in build
-        DATABASE_URL: "postgresql://dummy:dummy@localhost:5432/dummy"
-        AUTH_SECRET: "dummy-secret-for-ci"
-        GOOGLE_CLIENT_ID: "dummy"
-        GOOGLE_CLIENT_SECRET: "dummy"
-        GITHUB_CLIENT_ID: "dummy"
-        GITHUB_CLIENT_SECRET: "dummy"
-        SMTP_HOST: "dummy"
-        SMTP_PORT: "587"
-        SMTP_USER: "dummy"
-        SMTP_PASS: "dummy"
+      - uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run format
+
+      - name: Run linting and type checking
+        run: npm run lint
+
+      - name: Build project
+        run: npm run build
+        env:
+          # Use dummy values for CI - these won't be used in build
+          DATABASE_URL: 'postgresql://dummy:dummy@localhost:5432/dummy'
+          AUTH_SECRET: 'dummy-secret-for-ci'
+          GOOGLE_CLIENT_ID: 'dummy'
+          GOOGLE_CLIENT_SECRET: 'dummy'
+          GITHUB_CLIENT_ID: 'dummy'
+          GITHUB_CLIENT_SECRET: 'dummy'
+          SMTP_HOST: 'dummy'
+          SMTP_PORT: '587'
+          SMTP_USER: 'dummy'
+          SMTP_PASS: 'dummy'

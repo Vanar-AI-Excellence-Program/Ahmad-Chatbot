@@ -1,6 +1,5 @@
 // See https://svelte.dev/docs/kit/types#app.d.ts
 // for information about these interfaces
-import type { AuthConfig } from '@auth/core';
 import type { Session, DefaultSession } from '@auth/core/types';
 
 declare global {

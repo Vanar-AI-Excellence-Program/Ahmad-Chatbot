@@ -1,16 +1,18 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  content: ['./src/**/*.{html,js,svelte,ts}'],
-  darkMode: 'class',
-  theme: {
-    extend: {
-      backdropBlur: {
-        xs: '2px',
-      },
-    },
-  },
-  plugins: [
-    require('@tailwindcss/forms'),
-    require('@tailwindcss/typography'),
-  ],
-} 
+	content: ['./src/**/*.{html,js,svelte,ts}'],
+	darkMode: 'class',
+	theme: {
+		extend: {
+			backdropBlur: {
+				xs: '2px'
+			}
+		}
+	},
+	plugins: [
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		require('@tailwindcss/forms'),
+		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		require('@tailwindcss/typography')
+	]
+};

@@ -2,13 +2,12 @@ import { json } from '@sveltejs/kit';
 import { db } from '$lib/server/db/index.js';
 import { users, accounts, verificationTokens } from '$lib/server/db/schema.js';
 import { sendEmail, generateVerificationEmailHtml } from '$lib/server/email.js';
-import { env } from '$lib/server/env.js';
 import bcrypt from 'bcryptjs';
 import { eq } from 'drizzle-orm';
 import { randomBytes } from 'crypto';
 import type { RequestHandler } from './$types.js';
 
-export const POST: RequestHandler = async ({ request }: any) => {
+export const POST: RequestHandler = async ({ request }) => {
 	try {
 		const { name, email, password } = await request.json();
 		const normalizedEmail = String(email).toLowerCase();
@@ -34,23 +33,26 @@ export const POST: RequestHandler = async ({ request }: any) => {
 		const hashedPassword = await bcrypt.hash(password, 12);
 
 		// Create user (unverified) with password
-		const newUser = await db.insert(users).values({
-			name,
-			email: normalizedEmail,
-			password: hashedPassword, // Store password in users table
-			emailVerified: null // User is not verified yet
-		}).returning();
+		const newUser = await db
+			.insert(users)
+			.values({
+				name,
+				email: normalizedEmail,
+				password: hashedPassword, // Store password in users table
+				emailVerified: null // User is not verified yet
+			})
+			.returning();
 
 		// Create credentials account
 		try {
-			const credentialsAccount = await db.insert(accounts).values({
+			await db.insert(accounts).values({
 				userId: newUser[0].id,
 				type: 'credentials',
 				provider: 'credentials',
 				providerAccountId: newUser[0].id
 				// No password needed here since it's stored in users table
-			}).returning();
-		} catch (accountError) {
+			});
+		} catch {
 			// Clean up the user since account creation failed
 			await db.delete(users).where(eq(users.id, newUser[0].id));
 			throw new Error('Failed to create credentials account');
@@ -78,12 +80,11 @@ export const POST: RequestHandler = async ({ request }: any) => {
 			return json({ error: 'Failed to send verification email' }, { status: 500 });
 		}
 
-		return json({ 
+		return json({
 			message: 'User created successfully. Please check your email to verify your account.',
-			userId: newUser[0].id 
+			userId: newUser[0].id
 		});
-
-	} catch (error: any) {
+	} catch (error) {
 		console.error('Signup error:', error);
 		return json({ error: 'Internal server error' }, { status: 500 });
 	}

@@ -25,7 +25,7 @@ const createThemeStore = () => {
 	return {
 		subscribe,
 		toggle: () => {
-			update(current => {
+			update((current) => {
 				const newTheme = current === 'light' ? 'dark' : 'light';
 				if (browser) {
 					localStorage.setItem('theme', newTheme);
@@ -48,7 +48,7 @@ export const theme = createThemeStore();
 
 // Initialize theme on page load
 if (browser) {
-	theme.subscribe(current => {
+	theme.subscribe((current) => {
 		document.documentElement.classList.toggle('dark', current === 'dark');
 	});
-} 
+}

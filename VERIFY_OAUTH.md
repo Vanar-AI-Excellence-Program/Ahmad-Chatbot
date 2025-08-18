@@ -26,18 +26,22 @@ The environment variables are now properly loaded! The OAuth errors should be re
 ## 🧪 **Testing OAuth**
 
 ### **Step 1: Start the Development Server**
+
 ```bash
 npm run dev
 ```
 
 ### **Step 2: Test OAuth Login**
+
 1. Visit: http://localhost:5173/login
 2. Click "Continue with Google" or "Continue with GitHub"
 3. Complete the OAuth flow
 4. You should be redirected to `/profile`
 
 ### **Step 3: Check Console Output**
+
 Look for these messages in the terminal:
+
 ```
 🔍 Environment Variables Check:
 GOOGLE_CLIENT_ID: ✅ Set
@@ -54,24 +58,29 @@ GitHub OAuth: ✅ Available
 ## 🚨 **Common Issues & Solutions**
 
 ### **"Provider not found" Error**
+
 - **Cause**: Environment variables not loaded
 - **Solution**: ✅ **FIXED** - Environment variables are now properly loaded
 
 ### **"redirect_uri_mismatch" Error**
+
 - **Cause**: OAuth app redirect URI doesn't match
 - **Solution**: Update OAuth app settings with correct redirect URIs
 
 ### **"invalid_client" Error**
+
 - **Cause**: Client ID or Secret is incorrect
 - **Solution**: Verify OAuth credentials in `.env` file
 
 ### **404 Error on OAuth Callback**
+
 - **Cause**: Callback URL not configured correctly
 - **Solution**: Update OAuth app callback URL
 
 ## 📋 **Required OAuth App Settings**
 
 ### **Google OAuth App**
+
 ```
 Application type: Web application
 Authorized redirect URIs: http://localhost:5173/auth/callback/google
@@ -79,6 +88,7 @@ Authorized JavaScript origins: http://localhost:5173
 ```
 
 ### **GitHub OAuth App**
+
 ```
 Application name: Your App Name
 Homepage URL: http://localhost:5173

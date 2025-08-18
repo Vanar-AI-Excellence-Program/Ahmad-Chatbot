@@ -3,50 +3,54 @@ import { env } from './env.js';
 
 // Create transporter
 const transporter = nodemailer.createTransport({
-  host: env.SMTP_HOST,
-  port: env.SMTP_PORT,
-  secure: false, // true for 465, false for other ports
-  auth: {
-    user: env.SMTP_USER,
-    pass: env.SMTP_PASS,
-  },
+	host: env.SMTP_HOST,
+	port: env.SMTP_PORT,
+	secure: false, // true for 465, false for other ports
+	auth: {
+		user: env.SMTP_USER,
+		pass: env.SMTP_PASS
+	}
 });
 
 // Verify transporter configuration
-transporter.verify(function (error, success) {
-  if (error) {
-    console.log('❌ SMTP Error:', error);
-  } else {
-    console.log('✅ SMTP Server is ready to send emails');
-  }
+transporter.verify(function (error) {
+	if (error) {
+		console.log('❌ SMTP Error:', error);
+	} else {
+		console.log('✅ SMTP Server is ready to send emails');
+	}
 });
 
 export interface EmailOptions {
-  to: string;
-  subject: string;
-  html: string;
+	to: string;
+	subject: string;
+	html: string;
 }
 
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
-  try {
-    const mailOptions = {
-      from: env.SMTP_FROM,
-      to: options.to,
-      subject: options.subject,
-      html: options.html,
-    };
+	try {
+		const mailOptions = {
+			from: env.SMTP_FROM,
+			to: options.to,
+			subject: options.subject,
+			html: options.html
+		};
 
-    await transporter.sendMail(mailOptions);
-    console.log(`✅ Email sent successfully to ${options.to}`);
-    return true;
-  } catch (error) {
-    console.error('❌ Failed to send email:', error);
-    return false;
-  }
+		await transporter.sendMail(mailOptions);
+		console.log(`✅ Email sent successfully to ${options.to}`);
+		return true;
+	} catch (error) {
+		console.error('❌ Failed to send email:', error);
+		return false;
+	}
 }
 
-export function generateVerificationEmailHtml(email: string, verificationCode: string, origin: string): string {
-  return `
+export function generateVerificationEmailHtml(
+	email: string,
+	verificationCode: string,
+	origin: string
+): string {
+	return `
     <!DOCTYPE html>
     <html>
     <head>

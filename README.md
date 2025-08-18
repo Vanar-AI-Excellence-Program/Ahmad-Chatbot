@@ -44,4 +44,3 @@ SMTP_PASS=your-app-password
 - **Email Verification**: Email verification required for account activation
 - **Database Sessions**: Secure session management with PostgreSQL
 - **Modern UI**: Beautiful, responsive design with Tailwind CSS
-

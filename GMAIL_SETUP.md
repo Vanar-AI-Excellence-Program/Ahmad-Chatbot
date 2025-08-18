@@ -7,11 +7,13 @@ The error `535-5.7.8 Username and Password not accepted` occurs because Gmail re
 ## 📋 **Step-by-Step Solution**
 
 ### **1. Enable 2-Factor Authentication**
+
 1. Go to [Google Account Settings](https://myaccount.google.com/)
 2. Navigate to **Security**
 3. Enable **2-Step Verification** (if not already enabled)
 
 ### **2. Generate App Password**
+
 1. Go to [Google Account Settings](https://myaccount.google.com/)
 2. Navigate to **Security** → **2-Step Verification**
 3. Scroll down to **App passwords**
@@ -20,6 +22,7 @@ The error `535-5.7.8 Username and Password not accepted` occurs because Gmail re
 6. Copy the generated 16-character password
 
 ### **3. Update Environment Variables**
+
 Replace your current email settings in `.env`:
 
 ```env
@@ -32,6 +35,7 @@ EMAIL_FROM=muhammad.ahmad@bigimmersive.com
 ```
 
 ### **4. Alternative: Use Gmail OAuth2 (Recommended)**
+
 For better security, consider using OAuth2 instead of App Passwords:
 
 ```env
@@ -46,17 +50,21 @@ EMAIL_FROM=muhammad.ahmad@bigimmersive.com
 ## 🔧 **Troubleshooting**
 
 ### **Common Issues:**
+
 1. **Wrong Password**: Using regular Gmail password instead of App Password
 2. **2FA Not Enabled**: Must enable 2-Factor Authentication first
 3. **App Password Expired**: Generate a new App Password
 4. **Account Security**: Google may block suspicious login attempts
 
 ### **Test Connection:**
+
 The application now includes connection verification. Check the console for:
+
 - ✅ `SMTP connection verified successfully`
 - ✅ `Email sent successfully to: [email]`
 
 ### **Error Messages:**
+
 - `EAUTH`: Authentication failed - check App Password
 - `ECONNECTION`: Network/connection issues
 - `ETIMEDOUT`: Connection timeout
@@ -71,6 +79,7 @@ The application now includes connection verification. Check the console for:
 ## 📧 **Testing**
 
 After setup, test the email functionality:
+
 1. Visit `http://localhost:5174/signup`
 2. Enter a test email address
 3. Submit the form
