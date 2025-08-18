@@ -102,7 +102,7 @@ export const authOptions = {
 		})
 	],
 	session: {
-		strategy: 'database',
+		strategy: 'database' as const,
 		maxAge: 30 * 24 * 60 * 60, // 30 days
 		updateAge: 24 * 60 * 60 // 24 hours
 	},
@@ -129,7 +129,7 @@ export const authOptions = {
 		}
 	},
 	events: {
-		async signIn({ user, account }: { user: User; account: Account }) {
+		async signIn({ user, account }: { user: User; account?: Account | null }) {
 			try {
 				console.log('✅ SignIn event - user:', user?.id, 'account:', account?.provider);
 

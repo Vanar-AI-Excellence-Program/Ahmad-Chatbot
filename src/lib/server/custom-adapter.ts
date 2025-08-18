@@ -55,7 +55,8 @@ export const customAdapter: Adapter = {
 			// Check if session is expired
 			if (new Date() > session.expires) {
 				console.log('❌ Session expired, cleaning up');
-				await this.deleteSession(sessionToken);
+				// Delete expired session directly
+				await db.delete(sessions).where(eq(sessions.sessionToken, sessionToken));
 				return null;
 			}
 
@@ -141,7 +142,7 @@ export const customAdapter: Adapter = {
 			});
 
 			console.log('✅ User found:', !!user);
-			return user;
+			return user || null;
 		} catch (error) {
 			console.error('❌ Error getting user:', error);
 			return null;
@@ -157,7 +158,7 @@ export const customAdapter: Adapter = {
 			});
 
 			console.log('✅ User found by email:', !!user);
-			return user;
+			return user || null;
 		} catch (error) {
 			console.error('❌ Error getting user by email:', error);
 			return null;
@@ -185,7 +186,7 @@ export const customAdapter: Adapter = {
 			});
 
 			console.log('✅ User found by account:', !!user);
-			return user;
+			return user || null;
 		} catch (error) {
 			console.error('❌ Error getting user by account:', error);
 			return null;
@@ -221,9 +222,8 @@ export const customAdapter: Adapter = {
 		try {
 			console.log('🔐 Custom adapter: Linking account');
 
-			const result = await db.insert(accounts).values(account).returning();
+			await db.insert(accounts).values(account);
 			console.log('✅ Account linked manually');
-			return result[0];
 		} catch (error) {
 			console.error('❌ Manual account linking failed:', error);
 			throw error;
