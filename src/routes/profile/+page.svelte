@@ -3,7 +3,7 @@
 	import { page } from '$app/stores';
 
 	async function handleLogout() {
-		await signOut({ redirectTo: '/chat' });
+		await signOut({ redirectTo: '/login' });
 	}
 
 	function handleEditProfile() {

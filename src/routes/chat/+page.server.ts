@@ -10,8 +10,8 @@ export const load: PageServerLoad = async ({ locals }: { locals: any }) => {
 		throw redirect(302, '/login');
 	}
 
-	// Return session data for the profile interface
+	// Return session data for the chat interface
 	return {
-		session
+		user: session.user
 	};
 };

@@ -10,7 +10,7 @@
 
 	async function handleSignOut() {
 		await signOut();
-		goto('/chat');
+		goto('/login');
 	}
 </script>
 

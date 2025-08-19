@@ -1,4 +1,5 @@
 import { db } from '$lib/server/db/index.js';
+import { redirect } from '@sveltejs/kit';
 import type { PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async (event) => {
@@ -17,22 +18,14 @@ export const load: PageServerLoad = async (event) => {
 
 		if (!session?.user?.id) {
 			console.log('❌ No session or user ID found');
-			// Return error state instead of redirecting
-			return {
-				error: 'Authentication required',
-				authenticated: false,
-				users: []
-			};
+			// Redirect unauthenticated users to login
+			throw redirect(302, '/login');
 		}
 
 		if ((session.user as { role?: string }).role !== 'admin') {
 			console.log('❌ User is not admin, role:', (session.user as { role?: string }).role);
-			// Return error state instead of redirecting
-			return {
-				error: 'Admin access required',
-				authenticated: false,
-				users: []
-			};
+			// Redirect non-admin users to home page
+			throw redirect(302, '/');
 		}
 
 		console.log('✅ User is authenticated and is admin, fetching users...');

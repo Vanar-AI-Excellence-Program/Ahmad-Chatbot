@@ -186,8 +186,8 @@ export const authOptions = {
 			// Allow relative URLs and same-origin redirects
 			if (url.startsWith('/')) return url;
 			if (url.startsWith(baseUrl)) return url;
-			// Default to chatbot UI for external URLs
-			return `${baseUrl}/chat`;
+			// Default to login page for external URLs (instead of chatbot)
+			return `${baseUrl}/login`;
 		}
 	}
 };
