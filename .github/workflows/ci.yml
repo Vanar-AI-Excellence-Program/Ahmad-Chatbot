@@ -45,3 +45,4 @@ jobs:
           SMTP_PORT: '587'
           SMTP_USER: 'dummy'
           SMTP_PASS: 'dummy'
+          GEMINI_API_KEY='dummy api key'
