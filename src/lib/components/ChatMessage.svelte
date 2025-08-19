@@ -1,10 +1,48 @@
 <script lang="ts">
+	import { marked } from 'marked';
+	import { onMount } from 'svelte';
+
 	export let message: {
 		id: string;
 		content: string;
 		role: 'user' | 'assistant';
 		timestamp: Date;
 	};
+
+	let parsedContent = '';
+
+	onMount(() => {
+		// Configure marked for security and proper rendering
+		marked.setOptions({
+			breaks: true, // Convert line breaks to <br>
+			gfm: true, // GitHub Flavored Markdown
+			headerIds: false, // Disable header IDs for security
+			mangle: false, // Disable mangling for security
+			// Custom renderer to add security attributes
+			renderer: new marked.Renderer()
+		});
+
+		// Parse markdown content
+		if (message.role === 'assistant') {
+			try {
+				const rawHtml = marked(message.content);
+				// Basic sanitization - remove potentially dangerous attributes
+				parsedContent = rawHtml
+					.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+					.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+					.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+					.replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+					.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+					.replace(/javascript:/gi, '')
+					.replace(/data:/gi, '');
+			} catch (error) {
+				console.error('Error parsing markdown:', error);
+				parsedContent = message.content; // Fallback to plain text
+			}
+		} else {
+			parsedContent = message.content; // User messages remain as plain text
+		}
+	});
 
 	function formatTime(date: Date) {
 		return date.toLocaleTimeString('en-US', {
@@ -37,7 +75,15 @@
 					? 'bg-blue-500 text-white'
 					: 'text-slate-900 dark:text-slate-100'}"
 			>
-				<p class="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+				{#if message.role === 'assistant'}
+					<!-- Render markdown content for assistant messages -->
+					<div class="prose prose-sm max-w-none dark:prose-invert">
+						{@html parsedContent}
+					</div>
+				{:else}
+					<!-- Plain text for user messages -->
+					<p class="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
+				{/if}
 			</div>
 
 			{#if message.role === 'user'}
@@ -69,3 +115,189 @@
 		</div>
 	</div>
 </div>
+
+<style>
+	/* Custom styles for markdown content */
+	:global(.prose) {
+		--tw-prose-body: #475569;
+		--tw-prose-headings: #1e293b;
+		--tw-prose-links: #2563eb;
+		--tw-prose-bold: #1e293b;
+		--tw-prose-counters: #1e293b;
+		--tw-prose-bullets: #1e293b;
+		--tw-prose-hr: #e2e8f0;
+		--tw-prose-quotes: #1e293b;
+		--tw-prose-quote-borders: #e2e8f0;
+		--tw-prose-captions: #94a3b8;
+		--tw-prose-code: #334155;
+		--tw-prose-pre-code: #e2e8f0;
+		--tw-prose-pre-bg: #1e293b;
+		--tw-prose-th-borders: #cbd5e1;
+		--tw-prose-td-borders: #e2e8f0;
+	}
+
+	:global(.dark .prose) {
+		--tw-prose-body: #cbd5e1;
+		--tw-prose-headings: #f1f5f9;
+		--tw-prose-links: #60a5fa;
+		--tw-prose-bold: #f1f5f9;
+		--tw-prose-counters: #f1f5f9;
+		--tw-prose-bullets: #f1f5f9;
+		--tw-prose-hr: #475569;
+		--tw-prose-quotes: #f1f5f9;
+		--tw-prose-quote-borders: #475569;
+		--tw-prose-captions: #64748b;
+		--tw-prose-code: #cbd5e1;
+		--tw-prose-pre-code: #cbd5e1;
+		--tw-prose-pre-bg: #0f172a;
+		--tw-prose-th-borders: #475569;
+		--tw-prose-td-borders: #475569;
+	}
+
+	:global(.prose h1) { font-size: 1.5em; font-weight: 600; margin: 1em 0 0.5em 0; }
+	:global(.prose h2) { font-size: 1.25em; font-weight: 600; margin: 0.75em 0 0.5em 0; }
+	:global(.prose h3) { font-size: 1.125em; font-weight: 600; margin: 0.75em 0 0.5em 0; }
+	:global(.prose h4) { font-size: 1em; font-weight: 600; margin: 0.75em 0 0.5em 0; }
+	:global(.prose h5) { font-size: 0.875em; font-weight: 600; margin: 0.75em 0 0.5em 0; }
+	:global(.prose h6) { font-size: 0.75em; font-weight: 600; margin: 0.75em 0 0.5em 0; }
+
+	:global(.prose p) { margin: 0.75em 0; line-height: 1.6; }
+	:global(.prose ul) { margin: 0.75em 0; padding-left: 1.5em; }
+	:global(.prose ol) { margin: 0.75em 0; padding-left: 1.5em; }
+	:global(.prose li) { margin: 0.25em 0; }
+
+	:global(.prose code) {
+		background-color: #f1f5f9;
+		padding: 0.125rem 0.25rem;
+		border-radius: 0.25rem;
+		font-size: 0.875em;
+		font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+	}
+
+	:global(.dark .prose code) {
+		background-color: #1e293b;
+	}
+
+	:global(.prose pre) {
+		background-color: #1e293b;
+		color: #e2e8f0;
+		padding: 1rem;
+		border-radius: 0.5rem;
+		overflow-x: auto;
+		margin: 1em 0;
+	}
+
+	:global(.dark .prose pre) {
+		background-color: #0f172a;
+		color: #cbd5e1;
+	}
+
+	:global(.prose pre code) {
+		background-color: transparent;
+		padding: 0;
+		border-radius: 0;
+	}
+
+	:global(.prose blockquote) {
+		border-left: 4px solid #e2e8f0;
+		padding-left: 1rem;
+		margin: 1em 0;
+		font-style: italic;
+	}
+
+	:global(.dark .prose blockquote) {
+		border-left-color: #475569;
+	}
+
+	:global(.prose table) {
+		width: 100%;
+		border-collapse: collapse;
+		margin: 1em 0;
+	}
+
+	:global(.prose th, .prose td) {
+		border: 1px solid #e2e8f0;
+		padding: 0.5rem;
+		text-align: left;
+	}
+
+	:global(.dark .prose th, .dark .prose td) {
+		border-color: #475569;
+	}
+
+	:global(.prose th) {
+		background-color: #f8fafc;
+		font-weight: 600;
+	}
+
+	:global(.dark .prose th) {
+		background-color: #1e293b;
+	}
+
+	:global(.prose a) {
+		color: #2563eb;
+		text-decoration: underline;
+		text-decoration-color: #93c5fd;
+	}
+
+	:global(.dark .prose a) {
+		color: #60a5fa;
+		text-decoration-color: #1e40af;
+	}
+
+	:global(.prose a:hover) {
+		text-decoration-color: currentColor;
+	}
+
+	:global(.prose strong) {
+		font-weight: 600;
+	}
+
+	:global(.prose em) {
+		font-style: italic;
+	}
+
+	:global(.prose hr) {
+		border: none;
+		border-top: 1px solid #e2e8f0;
+		margin: 2em 0;
+	}
+
+	:global(.dark .prose hr) {
+		border-top-color: #475569;
+	}
+
+	/* Additional markdown-specific styles */
+	:global(.prose img) {
+		max-width: 100%;
+		height: auto;
+		border-radius: 0.5rem;
+		margin: 1em 0;
+	}
+
+	:global(.prose .highlight) {
+		background-color: #fef3c7;
+		padding: 0.125rem 0.25rem;
+		border-radius: 0.25rem;
+	}
+
+	:global(.dark .prose .highlight) {
+		background-color: #451a03;
+	}
+
+	:global(.prose .task-list) {
+		list-style: none;
+		padding-left: 0;
+	}
+
+	:global(.prose .task-list-item) {
+		display: flex;
+		align-items: flex-start;
+		margin: 0.5em 0;
+	}
+
+	:global(.prose .task-list-item input[type="checkbox"]) {
+		margin-right: 0.5em;
+		margin-top: 0.125em;
+	}
+</style>
