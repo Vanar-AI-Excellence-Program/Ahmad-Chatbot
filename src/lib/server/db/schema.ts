@@ -1,19 +1,20 @@
 import { pgTable, uuid, text, timestamp, primaryKey, integer } from 'drizzle-orm/pg-core';
 
-export const users = pgTable('users', {
+export const users = pgTable('user', {
 	id: uuid('id').primaryKey().defaultRandom(),
 	name: text('name').notNull().default('User'),
 	email: text('email').notNull().unique(),
 	emailVerified: timestamp('emailVerified'),
 	image: text('image'),
-	// Password is nullable because OAuth users won't have a password
-	password: text('password'),
+	// Role field for RBAC - default to 'user', can be 'admin'
+	role: text('role').notNull().default('user'),
+	// Password removed from users table - now stored in accounts table for credentials provider
 	createdAt: timestamp('created_at').defaultNow().notNull(),
 	updatedAt: timestamp('updated_at').defaultNow().notNull()
 });
 
 export const accounts = pgTable(
-	'accounts',
+	'account',
 	{
 		id: uuid('id').defaultRandom(),
 		userId: uuid('userId')
@@ -22,7 +23,8 @@ export const accounts = pgTable(
 		type: text('type').notNull(),
 		provider: text('provider').notNull(),
 		providerAccountId: text('providerAccountId').notNull(),
-		// Password field removed - now stored in users table
+		// Password field for credentials provider
+		password: text('password'),
 		refresh_token: text('refresh_token'),
 		access_token: text('access_token'),
 		expires_at: integer('expires_at'),
@@ -36,20 +38,20 @@ export const accounts = pgTable(
 	})
 );
 
-export const sessions = pgTable('sessions', {
+export const sessions = pgTable('session', {
 	sessionToken: text('sessionToken').primaryKey(),
 	userId: uuid('userId')
 		.notNull()
 		.references(() => users.id, { onDelete: 'cascade' }),
-	expires: timestamp('expires', { mode: 'date' }).notNull() // Fixed: use mode: 'date' to match DrizzleAdapter expectations
+	expires: timestamp('expires', { mode: 'date', withTimezone: true }).notNull()
 });
 
 export const verificationTokens = pgTable(
-	'verificationTokens',
+	'verificationToken',
 	{
 		identifier: text('identifier').notNull(),
 		token: text('token').notNull(),
-		expires: timestamp('expires', { mode: 'date' }).notNull() // Fixed: use mode: 'date' to match DrizzleAdapter expectations
+		expires: timestamp('expires', { mode: 'date', withTimezone: true }).notNull()
 	},
 	(table) => ({
 		compoundKey: primaryKey({ columns: [table.identifier, table.token] })

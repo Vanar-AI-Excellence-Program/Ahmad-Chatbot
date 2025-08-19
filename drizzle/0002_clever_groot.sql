@@ -1,0 +1,2 @@
+ALTER TABLE "sessions" ALTER COLUMN "expires" SET DATA TYPE timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "verificationTokens" ALTER COLUMN "expires" SET DATA TYPE timestamp with time zone;

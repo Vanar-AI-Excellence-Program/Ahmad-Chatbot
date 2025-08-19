@@ -10,7 +10,8 @@
 	// Get email from URL params
 	$: email = $page.url.searchParams.get('email') || '';
 
-	async function handleSubmit() {
+	async function handleSubmit(e: Event) {
+		e.preventDefault();
 		if (!verificationCode.trim()) {
 			error = 'Please enter the verification code';
 			return;
@@ -134,7 +135,7 @@
 				</div>
 			{/if}
 
-			<form on:submit|preventDefault={handleSubmit} class="space-y-6">
+			<form onsubmit={handleSubmit} class="space-y-6">
 				<div>
 					<label for="code" class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
 						Verification Code
@@ -180,7 +181,7 @@
 			<div class="mt-6 text-center">
 				<p class="mb-3 text-sm text-gray-600 dark:text-gray-300">Didn't receive the code?</p>
 				<button
-					on:click={resendCode}
+					onclick={resendCode}
 					disabled={loading}
 					class="text-sm font-medium text-blue-600 hover:text-blue-500 disabled:opacity-50 dark:text-blue-400 dark:hover:text-blue-300"
 				>

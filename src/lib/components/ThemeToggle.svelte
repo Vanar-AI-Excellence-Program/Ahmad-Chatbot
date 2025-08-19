@@ -3,7 +3,7 @@
 </script>
 
 <button
-	on:click={theme.toggle}
+	onclick={theme.toggle}
 	class="rounded-lg border border-white/20 bg-white/30 p-2 shadow-lg backdrop-blur-md transition-colors hover:bg-white/40 dark:border-gray-700/20 dark:bg-gray-800/30 dark:hover:bg-gray-800/40"
 	aria-label="Toggle theme"
 >

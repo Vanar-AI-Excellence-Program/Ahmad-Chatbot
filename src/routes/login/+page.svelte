@@ -8,6 +8,7 @@
 	let error = '';
 
 	async function handleSubmit(e: Event) {
+		e.preventDefault();
 		loading = true;
 		error = '';
 		try {
@@ -18,7 +19,7 @@
 			await signIn('credentials', {
 				email,
 				password,
-				redirectTo: '/profile'
+				redirectTo: '/chat'
 			});
 		} catch (err) {
 			console.error('❌ Login error:', err);
@@ -29,12 +30,12 @@
 	}
 
 	async function handleOAuthSignIn(provider: string) {
-		await signIn(provider, { callbackUrl: '/profile' });
+		await signIn(provider, { callbackUrl: '/chat' });
 	}
 
 	onMount(() => {
 		if ($page.data.session?.user) {
-			goto('/profile');
+			goto('/chat');
 		}
 	});
 </script>
@@ -64,7 +65,7 @@
 			<!-- OAuth Buttons -->
 			<div class="mb-6 space-y-3">
 				<button
-					on:click={() => handleOAuthSignIn('google')}
+					onclick={() => handleOAuthSignIn('google')}
 					class="flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
 				>
 					<svg class="mr-3 h-5 w-5" viewBox="0 0 24 24">
@@ -89,7 +90,7 @@
 				</button>
 
 				<button
-					on:click={() => handleOAuthSignIn('github')}
+					onclick={() => handleOAuthSignIn('github')}
 					class="flex w-full items-center justify-center rounded-md border border-gray-300 bg-white px-4 py-3 text-gray-700 transition-colors hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
 				>
 					<svg class="mr-3 h-5 w-5" fill="currentColor" viewBox="0 0 24 24">
@@ -113,7 +114,7 @@
 				</div>
 			</div>
 
-			<form on:submit|preventDefault={handleSubmit} class="space-y-6">
+			<form onsubmit={handleSubmit} class="space-y-6">
 				<div>
 					<label
 						for="email"

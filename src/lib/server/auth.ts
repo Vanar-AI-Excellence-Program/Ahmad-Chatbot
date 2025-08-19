@@ -3,182 +3,184 @@ import { SvelteKitAuth } from '@auth/sveltekit';
 import CredentialsProvider from '@auth/core/providers/credentials';
 import GoogleProvider from '@auth/core/providers/google';
 import GitHubProvider from '@auth/core/providers/github';
-import { db } from '$lib/server/db/index.js';
-import { users, sessions } from '$lib/server/db/schema.js';
-import { eq } from 'drizzle-orm';
-import bcrypt from 'bcryptjs';
-import { env as privateEnv } from '$env/dynamic/private';
-import type { Session, User, Account } from '@auth/core/types';
-import { customAdapter } from './custom-adapter.js';
+import { compare } from 'bcryptjs';
+import { DrizzleAdapter } from '@auth/drizzle-adapter';
 
-// Test database connection and verify tables exist
-console.log('🔌 Testing database connection and tables...');
-Promise.all([
-	db.query.users.findFirst(),
-	// Test sessions table access using a simple query instead of findFirst
-	db.execute(db.select().from(sessions).limit(1))
-])
-	.then(([user]) => {
-		console.log('✅ Database connection successful');
-		console.log('📋 Users table accessible:', !!user);
-		console.log('📋 Sessions table accessible:', true); // Sessions table is accessible if we can execute queries
-	})
-	.catch((err) => {
-		console.error('❌ Database connection failed:', err);
-	});
+// Drizzle client & schema
+import { db } from '$lib/server/db/index.js';
+import * as schema from '$lib/server/db/schema.js';
+import { eq, and } from 'drizzle-orm';
+import { env as privateEnv } from '$env/dynamic/private';
 
 export const authOptions = {
-	adapter: customAdapter,
+	adapter: DrizzleAdapter(db),
+
+	session: {
+		strategy: 'database' as const // Store sessions in DB, not JWT
+	},
+
 	providers: [
 		GoogleProvider({
 			clientId: privateEnv.GOOGLE_CLIENT_ID!,
-			clientSecret: privateEnv.GOOGLE_CLIENT_SECRET!,
-			allowDangerousEmailAccountLinking: true
+			clientSecret: privateEnv.GOOGLE_CLIENT_SECRET!
 		}),
 		GitHubProvider({
 			clientId: privateEnv.GITHUB_CLIENT_ID!,
-			clientSecret: privateEnv.GITHUB_CLIENT_SECRET!,
-			allowDangerousEmailAccountLinking: true
+			clientSecret: privateEnv.GITHUB_CLIENT_SECRET!
 		}),
 		CredentialsProvider({
-			name: 'credentials',
 			credentials: {
 				email: { label: 'Email', type: 'email' },
 				password: { label: 'Password', type: 'password' }
 			},
-			async authorize(credentials) {
-				try {
-					console.log('🔐 Authorize called with:', credentials?.email);
+			async authorize(creds: any) {
+				console.log('🔐 Credentials authorize called with:', {
+					email: creds?.email,
+					hasPassword: !!creds?.password
+				});
 
-					if (!credentials?.email || !credentials?.password) {
-						console.log('❌ Missing credentials');
-						return null;
-					}
-
-					const user = await db.query.users.findFirst({
-						where: eq(users.email, credentials.email as string)
-					});
-
-					console.log(
-						'👤 User found:',
-						user ? { id: user.id, email: user.email, emailVerified: user.emailVerified } : null
-					);
-
-					if (!user?.password) {
-						console.log('❌ User not found or no password');
-						return null;
-					}
-
-					// Temporarily remove email verification requirement for testing
-					// if (!user.emailVerified) {
-					//   throw new Error('EMAIL_NOT_VERIFIED');
-					// }
-
-					const ok = await bcrypt.compare(credentials.password as string, user.password);
-					console.log('🔑 Password check result:', ok);
-
-					if (!ok) {
-						console.log('❌ Password mismatch');
-						return null;
-					}
-
-					console.log('✅ Authorization successful for user:', user.id);
-					return {
-						id: user.id,
-						email: user.email,
-						name: user.name
-					};
-				} catch (error) {
-					console.error('❌ Authorization error:', error);
-					return null;
+				if (!creds?.email || !creds?.password) {
+					console.log('❌ Missing credentials');
+					throw new Error('Email and password required');
 				}
+
+				// Fetch user from your database
+				const user = await db.query.users.findFirst({
+					where: eq(schema.users.email, (creds.email as string).toLowerCase())
+				});
+				console.log('🔍 User lookup result:', {
+					found: !!user,
+					userId: user?.id,
+					userRole: user?.role
+				});
+
+				if (!user) {
+					console.log('❌ User not found');
+					throw new Error('Invalid credentials');
+				}
+
+				// Fetch stored password hash from your credentials table
+				const account = await db.query.accounts.findFirst({
+					where: and(
+						eq(schema.accounts.userId, user.id),
+						eq(schema.accounts.provider, 'credentials')
+					)
+				});
+				console.log('🔍 Account lookup result:', {
+					found: !!account,
+					hasPassword: !!account?.password
+				});
+
+				if (!account?.password) {
+					console.log('❌ Account or password not found');
+					throw new Error('Invalid credentials');
+				}
+
+				const valid = await compare(creds.password as string, account.password as string);
+				console.log('🔑 Password validation result:', valid);
+
+				if (!valid) {
+					console.log('❌ Password mismatch');
+					throw new Error('Invalid credentials');
+				}
+
+				const userData = {
+					id: String(user.id),
+					email: user.email,
+					name: user.name ?? null,
+					role: user.role
+				};
+				console.log('✅ Credentials authorize successful, returning user data:', userData);
+
+				return userData;
 			}
 		})
 	],
-	session: {
-		strategy: 'database' as const,
-		maxAge: 30 * 24 * 60 * 60, // 30 days
-		updateAge: 24 * 60 * 60 // 24 hours
-	},
-	trustHost: true,
+
 	callbacks: {
-		async session({ session, user }: { session: Session; user: User }) {
-			try {
-				console.log('📋 Session callback called');
-				console.log('📋 Session object:', session);
-				console.log('📋 User object:', user);
+		async signIn({ account, profile }: { account?: any; profile?: any }) {
+			console.log('🔐 SignIn callback triggered:', {
+				account: account?.provider,
+				profile: profile?.email
+			});
 
-				if (session.user && user && user.id && user.email && user.name) {
-					session.user.id = user.id;
-					session.user.email = user.email;
-					session.user.name = user.name;
-					console.log('📋 Updated session user:', session.user);
-				}
-
-				return session;
-			} catch (error) {
-				console.error('❌ Session callback error:', error);
-				return session;
+			if (!account || account.provider === 'credentials') {
+				console.log('✅ Credentials provider, allowing sign in');
+				return true;
 			}
+
+			const email = (profile as any)?.email as string | undefined;
+			if (!email) {
+				console.log('⚠️ No email in profile, allowing sign in');
+				return true;
+			}
+
+			// Find existing user
+			const existingUser = await db.query.users.findFirst({
+				where: eq(schema.users.email, email.toLowerCase())
+			});
+			console.log('🔍 Existing user check:', { email, found: !!existingUser });
+
+			if (!existingUser) {
+				console.log('✅ New OAuth user, allowing sign in');
+				return true;
+			}
+
+			// Get linked providers for this user
+			const linkedAccounts = await db.query.accounts.findMany({
+				where: eq(schema.accounts.userId, existingUser.id)
+			});
+			const linkedProviders = linkedAccounts.map((a) => a.provider);
+			console.log('🔗 Linked providers:', linkedProviders);
+
+			if (!linkedProviders.includes(account.provider)) {
+				const suggested = linkedProviders[0] ?? 'password';
+				const params = new URLSearchParams({
+					error: 'OAuthAccountExists',
+					provider: suggested
+				});
+				console.log('❌ OAuth account exists with different provider, redirecting');
+				return `/login?${params.toString()}`;
+			}
+
+			console.log('✅ OAuth sign in allowed');
+			return true;
+		},
+
+		async session({ session, user }: { session: any; user: any }) {
+			console.log('📋 Session callback triggered:', {
+				sessionUserId: session?.user?.id,
+				dbUserId: user?.id,
+				userRole: user?.role,
+				sessionUser: session?.user
+			});
+
+			if (session.user && user && user.id && user.email && user.name) {
+				session.user.id = String(user.id);
+				// Add role to session for RBAC
+				session.user.role = user.role;
+				console.log('✅ Session updated with user data:', session.user);
+			} else {
+				console.log('⚠️ Session callback: missing user data', { session, user });
+			}
+			return session;
+		},
+
+		async jwt({ token }: { token: any }) {
+			console.log('🎫 JWT callback triggered:', token);
+			return token;
+		},
+
+		// Prevent automatic redirects
+		async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+			console.log('🔄 Redirect callback:', { url, baseUrl });
+			// Allow relative URLs and same-origin redirects
+			if (url.startsWith('/')) return url;
+			if (url.startsWith(baseUrl)) return url;
+			// Default to chatbot UI for external URLs
+			return `${baseUrl}/chat`;
 		}
-	},
-	events: {
-		async signIn({ user, account }: { user: User; account?: Account | null }) {
-			try {
-				console.log('✅ SignIn event - user:', user?.id, 'account:', account?.provider);
-
-				// Verify that the user exists in the database
-				if (user?.id) {
-					const dbUser = await db.query.users.findFirst({ where: eq(users.id, user.id) });
-					console.log('🔍 Database user verification:', !!dbUser);
-				}
-			} catch (error) {
-				console.error('❌ SignIn event error:', error);
-			}
-		},
-		async signOut() {
-			try {
-				console.log('❌ SignOut event');
-			} catch (error) {
-				console.error('❌ SignOut event error:', error);
-			}
-		},
-		async createSession({ user }: { user: User }) {
-			try {
-				console.log('🆕 CreateSession event - user:', user?.id);
-
-				// Verify session was created in database
-				if (user?.id) {
-					const dbSession = await db.query.sessions.findFirst({
-						where: eq(sessions.userId, user.id)
-					});
-					console.log('🔍 Database session verification:', !!dbSession);
-
-					if (!dbSession) {
-						console.log('⚠️ Warning: Session not found in database after creation');
-					}
-				}
-			} catch (error) {
-				console.error('❌ CreateSession event error:', error);
-			}
-		},
-		async updateSession({ user }: { user: User }) {
-			try {
-				console.log('🔄 UpdateSession event - user:', user?.id);
-			} catch (error) {
-				console.error('❌ UpdateSession event error:', error);
-			}
-		},
-		async deleteSession() {
-			try {
-				console.log('🗑️ DeleteSession event');
-			} catch (error) {
-				console.error('❌ DeleteSession event error:', error);
-			}
-		}
-	},
-	debug: true,
-	secret: privateEnv.AUTH_SECRET
+	}
 };
 
 export const { handle, signIn, signOut } = SvelteKitAuth(authOptions);
