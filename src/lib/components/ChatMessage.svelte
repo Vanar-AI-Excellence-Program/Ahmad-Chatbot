@@ -15,26 +15,30 @@
 		// Configure marked for security and proper rendering
 		marked.setOptions({
 			breaks: true, // Convert line breaks to <br>
-			gfm: true, // GitHub Flavored Markdown
-			headerIds: false, // Disable header IDs for security
-			mangle: false, // Disable mangling for security
-			// Custom renderer to add security attributes
-			renderer: new marked.Renderer()
+			gfm: true // GitHub Flavored Markdown
 		});
 
 		// Parse markdown content
 		if (message.role === 'assistant') {
 			try {
-				const rawHtml = marked(message.content);
-				// Basic sanitization - remove potentially dangerous attributes
-				parsedContent = rawHtml
-					.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-					.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-					.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
-					.replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
-					.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-					.replace(/javascript:/gi, '')
-					.replace(/data:/gi, '');
+				// Handle both sync and async versions of marked
+				const parseMarkdown = async () => {
+					const rawHtml = await marked(message.content);
+					// Basic sanitization - remove potentially dangerous attributes
+					parsedContent = rawHtml
+						.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+						.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+						.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+						.replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+						.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+						.replace(/javascript:/gi, '')
+						.replace(/data:/gi, '');
+				};
+
+				parseMarkdown().catch((error) => {
+					console.error('Error parsing markdown:', error);
+					parsedContent = message.content; // Fallback to plain text
+				});
 			} catch (error) {
 				console.error('Error parsing markdown:', error);
 				parsedContent = message.content; // Fallback to plain text
@@ -78,6 +82,7 @@
 				{#if message.role === 'assistant'}
 					<!-- Render markdown content for assistant messages -->
 					<div class="prose prose-sm max-w-none dark:prose-invert">
+						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						{@html parsedContent}
 					</div>
 				{:else}
@@ -154,24 +159,60 @@
 		--tw-prose-td-borders: #475569;
 	}
 
-	:global(.prose h1) { font-size: 1.5em; font-weight: 600; margin: 1em 0 0.5em 0; }
-	:global(.prose h2) { font-size: 1.25em; font-weight: 600; margin: 0.75em 0 0.5em 0; }
-	:global(.prose h3) { font-size: 1.125em; font-weight: 600; margin: 0.75em 0 0.5em 0; }
-	:global(.prose h4) { font-size: 1em; font-weight: 600; margin: 0.75em 0 0.5em 0; }
-	:global(.prose h5) { font-size: 0.875em; font-weight: 600; margin: 0.75em 0 0.5em 0; }
-	:global(.prose h6) { font-size: 0.75em; font-weight: 600; margin: 0.75em 0 0.5em 0; }
+	:global(.prose h1) {
+		font-size: 1.5em;
+		font-weight: 600;
+		margin: 1em 0 0.5em 0;
+	}
+	:global(.prose h2) {
+		font-size: 1.25em;
+		font-weight: 600;
+		margin: 0.75em 0 0.5em 0;
+	}
+	:global(.prose h3) {
+		font-size: 1.125em;
+		font-weight: 600;
+		margin: 0.75em 0 0.5em 0;
+	}
+	:global(.prose h4) {
+		font-size: 1em;
+		font-weight: 600;
+		margin: 0.75em 0 0.5em 0;
+	}
+	:global(.prose h5) {
+		font-size: 0.875em;
+		font-weight: 600;
+		margin: 0.75em 0 0.5em 0;
+	}
+	:global(.prose h6) {
+		font-size: 0.75em;
+		font-weight: 600;
+		margin: 0.75em 0 0.5em 0;
+	}
 
-	:global(.prose p) { margin: 0.75em 0; line-height: 1.6; }
-	:global(.prose ul) { margin: 0.75em 0; padding-left: 1.5em; }
-	:global(.prose ol) { margin: 0.75em 0; padding-left: 1.5em; }
-	:global(.prose li) { margin: 0.25em 0; }
+	:global(.prose p) {
+		margin: 0.75em 0;
+		line-height: 1.6;
+	}
+	:global(.prose ul) {
+		margin: 0.75em 0;
+		padding-left: 1.5em;
+	}
+	:global(.prose ol) {
+		margin: 0.75em 0;
+		padding-left: 1.5em;
+	}
+	:global(.prose li) {
+		margin: 0.25em 0;
+	}
 
 	:global(.prose code) {
 		background-color: #f1f5f9;
 		padding: 0.125rem 0.25rem;
 		border-radius: 0.25rem;
 		font-size: 0.875em;
-		font-family: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+		font-family:
+			ui-monospace, SFMono-Regular, 'SF Mono', Consolas, 'Liberation Mono', Menlo, monospace;
 	}
 
 	:global(.dark .prose code) {
@@ -296,7 +337,7 @@
 		margin: 0.5em 0;
 	}
 
-	:global(.prose .task-list-item input[type="checkbox"]) {
+	:global(.prose .task-list-item input[type='checkbox']) {
 		margin-right: 0.5em;
 		margin-top: 0.125em;
 	}
