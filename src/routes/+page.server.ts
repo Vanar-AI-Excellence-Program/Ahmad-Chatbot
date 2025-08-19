@@ -5,13 +5,11 @@ import type { PageServerLoad } from './$types.js';
 export const load: PageServerLoad = async ({ locals }: { locals: any }) => {
 	const session = await locals.getSession();
 
-	if (!session?.user?.id) {
-		// Redirect unauthenticated users to login
-		throw redirect(302, '/login');
+	if (session?.user?.id) {
+		// Redirect authenticated users to chatbot
+		throw redirect(302, '/chat');
 	}
 
-	// Return session data for the profile interface
-	return {
-		session
-	};
+	// Return empty data for unauthenticated users (they'll see the home page)
+	return {};
 };

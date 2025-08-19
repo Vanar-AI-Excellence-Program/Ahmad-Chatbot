@@ -32,25 +32,25 @@ export const POST: RequestHandler = async ({ request }) => {
 		// Hash password
 		const hashedPassword = await bcrypt.hash(password, 12);
 
-		// Create user (unverified) with password
+		// Create user (unverified) WITHOUT password
 		const newUser = await db
 			.insert(users)
 			.values({
 				name,
 				email: normalizedEmail,
-				password: hashedPassword, // Store password in users table
+				// Password removed from users table - will be stored in accounts table
 				emailVerified: null // User is not verified yet
 			})
 			.returning();
 
-		// Create credentials account
+		// Create credentials account WITH password
 		try {
 			await db.insert(accounts).values({
 				userId: newUser[0].id,
 				type: 'credentials',
 				provider: 'credentials',
-				providerAccountId: newUser[0].id
-				// No password needed here since it's stored in users table
+				providerAccountId: newUser[0].id,
+				password: hashedPassword // Store password in accounts table
 			});
 		} catch {
 			// Clean up the user since account creation failed

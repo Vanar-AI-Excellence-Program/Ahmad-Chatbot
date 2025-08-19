@@ -31,6 +31,7 @@ SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password
+GEMINI_API_KEY=your-gemini-api-key-here
 ```
 
 8. **pnpm dev**
@@ -43,4 +44,42 @@ SMTP_PASS=your-app-password
 - **OAuth Integration**: Google and GitHub OAuth providers
 - **Email Verification**: Email verification required for account activation
 - **Database Sessions**: Secure session management with PostgreSQL
-- **Modern UI**: Beautiful, responsive design with Tailwind CSS
+- **AI Chat Interface**: Powered by Google Gemini AI with professional UI
+- **Role-Based Access Control**: Admin and user roles with admin dashboard
+- **Modern UI**: Beautiful, responsive design with Tailwind CSS and dark mode
+
+## AI Chat Setup
+
+To use the AI Chat feature, you'll need to:
+
+1. **Get a Gemini API Key**:
+   - Visit [Google AI Studio](https://makersuite.google.com/app/apikey)
+   - Create a new API key
+   - Copy the API key
+
+2. **Add to Environment Variables**:
+   - Add `GEMINI_API_KEY=your-actual-api-key` to your `.env` file
+
+3. **Access the Chat**:
+   - Navigate to `/chat` in your application
+   - Start chatting with the AI assistant!
+
+4. **Test API Connection**:
+   - Visit `/api/chat/health` to test your Gemini API connection
+
+### Troubleshooting
+
+If you encounter API errors:
+
+- **Model Not Found**: The app automatically tries `gemini-1.5-flash` first, then falls back to `gemini-pro`
+- **API Key Issues**: Make sure your `GEMINI_API_KEY` is correctly set in `.env`
+- **Quota Exceeded**: Check your Google AI Studio usage limits
+- **Health Check**: Use `/api/chat/health` to diagnose connection issues
+
+The chat interface includes:
+
+- Real-time AI responses using Gemini 1.5 Flash (with fallback to Gemini Pro)
+- Message history
+- Loading states
+- Error handling with detailed messages
+- Professional UI with dark mode support
