@@ -33,7 +33,7 @@ export const authOptions = {
 				email: { label: 'Email', type: 'email' },
 				password: { label: 'Password', type: 'password' }
 			},
-			async authorize(creds: any) {
+			async authorize(creds: Partial<Record<'email' | 'password', unknown>>) {
 				console.log('🔐 Credentials authorize called with:', {
 					email: creds?.email,
 					hasPassword: !!creds?.password
@@ -98,7 +98,13 @@ export const authOptions = {
 	],
 
 	callbacks: {
-		async signIn({ account, profile }: { account?: any; profile?: any }) {
+		async signIn({
+			account,
+			profile
+		}: {
+			account?: { provider: string };
+			profile?: { email?: string };
+		}) {
 			console.log('🔐 SignIn callback triggered:', {
 				account: account?.provider,
 				profile: profile?.email
@@ -109,7 +115,7 @@ export const authOptions = {
 				return true;
 			}
 
-			const email = (profile as any)?.email as string | undefined;
+			const email = profile?.email;
 			if (!email) {
 				console.log('⚠️ No email in profile, allowing sign in');
 				return true;
@@ -147,7 +153,13 @@ export const authOptions = {
 			return true;
 		},
 
-		async session({ session, user }: { session: any; user: any }) {
+		async session({
+			session,
+			user
+		}: {
+			session: { user?: { id?: string; email?: string; name?: string; role?: string } };
+			user?: { id?: string; email?: string; name?: string; role?: string };
+		}) {
 			console.log('📋 Session callback triggered:', {
 				sessionUserId: session?.user?.id,
 				dbUserId: user?.id,
@@ -166,7 +178,7 @@ export const authOptions = {
 			return session;
 		},
 
-		async jwt({ token }: { token: any }) {
+		async jwt({ token }: { token: Record<string, unknown> }) {
 			console.log('🎫 JWT callback triggered:', token);
 			return token;
 		},

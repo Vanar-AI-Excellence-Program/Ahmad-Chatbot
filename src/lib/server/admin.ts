@@ -9,13 +9,13 @@ export async function requireAdmin(event: RequestEvent) {
 	}
 
 	// Check if user has admin role
-	if ((session.user as any).role !== 'admin') {
+	if ((session.user as { role?: string }).role !== 'admin') {
 		throw redirect(302, '/');
 	}
 
 	return session;
 }
 
-export function isAdmin(session: any): boolean {
+export function isAdmin(session: { user?: { role?: string } }): boolean {
 	return session?.user?.role === 'admin';
 }

@@ -1,8 +1,4 @@
-import { redirect } from '@sveltejs/kit';
-import { requireAdmin } from '$lib/server/admin.js';
 import { db } from '$lib/server/db/index.js';
-import { users, accounts } from '$lib/server/db/schema.js';
-import { eq } from 'drizzle-orm';
 import type { PageServerLoad } from './$types.js';
 
 export const load: PageServerLoad = async (event) => {
@@ -14,7 +10,10 @@ export const load: PageServerLoad = async (event) => {
 		const session = await event.locals.getSession();
 		console.log('🔍 Admin page load - session result:', session);
 		console.log('🔍 Admin page load - session user:', session?.user);
-		console.log('🔍 Admin page load - session user role:', (session?.user as any)?.role);
+		console.log(
+			'🔍 Admin page load - session user role:',
+			(session?.user as { role?: string })?.role
+		);
 
 		if (!session?.user?.id) {
 			console.log('❌ No session or user ID found');
@@ -26,8 +25,8 @@ export const load: PageServerLoad = async (event) => {
 			};
 		}
 
-		if ((session.user as any).role !== 'admin') {
-			console.log('❌ User is not admin, role:', (session.user as any).role);
+		if ((session.user as { role?: string }).role !== 'admin') {
+			console.log('❌ User is not admin, role:', (session.user as { role?: string }).role);
 			// Return error state instead of redirecting
 			return {
 				error: 'Admin access required',
@@ -53,15 +52,15 @@ export const load: PageServerLoad = async (event) => {
 			id: user.id,
 			name: user.name,
 			email: user.email,
-			role: (user as any).role || 'user',
+			role: (user as { role?: string }).role || 'user',
 			emailVerified: user.emailVerified,
 			createdAt: user.createdAt,
 			updatedAt: user.updatedAt,
 			hasPassword:
-				(user.accounts as any[])?.some(
-					(acc: any) => acc.provider === 'credentials' && acc.password
+				(user.accounts as { provider: string; password?: string }[])?.some(
+					(acc) => acc.provider === 'credentials' && acc.password
 				) || false,
-			providers: (user.accounts as any[])?.map((acc: any) => acc.provider) || []
+			providers: (user.accounts as { provider: string }[])?.map((acc) => acc.provider) || []
 		}));
 
 		console.log('✅ Admin page load successful, returning data');

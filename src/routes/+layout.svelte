@@ -6,7 +6,7 @@
 	import { goto } from '$app/navigation';
 
 	$: session = $page.data.session;
-	$: isAdmin = (session?.user as any)?.role === 'admin';
+	$: isAdmin = (session?.user as { role?: string })?.role === 'admin';
 
 	async function handleSignOut() {
 		await signOut();

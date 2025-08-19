@@ -4,7 +4,7 @@
 	import ChatMessage from '$lib/components/ChatMessage.svelte';
 	import ChatLoading from '$lib/components/ChatLoading.svelte';
 	import ChatInput from '$lib/components/ChatInput.svelte';
-	import { chatStore, type Message } from '$lib/stores/chat.js';
+	import { chatStore } from '$lib/stores/chat.js';
 	import { chatService } from '$lib/services/chatService.js';
 
 	let chatContainer: HTMLElement;

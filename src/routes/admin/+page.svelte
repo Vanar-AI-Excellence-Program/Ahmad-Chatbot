@@ -1,13 +1,10 @@
 <script lang="ts">
-	import { page } from '$app/stores';
-	import { goto } from '$app/navigation';
-	import { onMount } from 'svelte';
 	import type { PageData } from './$types.js';
 
 	export let data: PageData;
 
 	let users = data.users;
-	let selectedUser: any = null;
+	let selectedUser: { id: string; name: string; email: string; role: string } | null = null;
 	let showRoleModal = false;
 	let newRole = 'user';
 	let loading = false;
@@ -45,7 +42,7 @@
 		}
 	}
 
-	function openRoleModal(user: any) {
+	function openRoleModal(user: { id: string; name: string; email: string; role: string }) {
 		selectedUser = user;
 		newRole = user.role;
 		showRoleModal = true;
@@ -69,19 +66,6 @@
 
 	function getRoleBadgeColor(role: string) {
 		return role === 'admin' ? 'bg-red-100 text-red-800' : 'bg-blue-100 text-blue-800';
-	}
-
-	function getProviderBadges(providers: string[]) {
-		return providers
-			.map((provider) => {
-				const colors = {
-					credentials: 'bg-gray-100 text-gray-800',
-					google: 'bg-blue-100 text-blue-800',
-					github: 'bg-gray-900 text-white'
-				};
-				return `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${colors[provider as keyof typeof colors] || 'bg-gray-100 text-gray-800'}">${provider}</span>`;
-			})
-			.join(' ');
 	}
 </script>
 
@@ -313,7 +297,7 @@
 								</tr>
 							</thead>
 							<tbody class="divide-y divide-gray-200 bg-white">
-								{#each users as user}
+								{#each users as user (user.id)}
 									<tr class="hover:bg-gray-50">
 										<td class="px-6 py-4 whitespace-nowrap">
 											<div class="flex items-center">
@@ -358,7 +342,7 @@
 										</td>
 										<td class="px-6 py-4 text-sm whitespace-nowrap text-gray-500">
 											<div class="flex space-x-1">
-												{#each user.providers as provider}
+												{#each user.providers as provider (provider)}
 													<span
 														class="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium {provider ===
 														'credentials'

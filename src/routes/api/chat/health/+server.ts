@@ -5,7 +5,7 @@ import type { RequestHandler } from '@sveltejs/kit';
 export const GET: RequestHandler = async () => {
 	try {
 		// Test the API connection by trying to create a model instance
-		const testModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+		genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
 		return json({
 			status: 'healthy',

@@ -4,11 +4,6 @@
 	import { onMount } from 'svelte';
 
 	$: session = $page.data.session;
-	$: isAdmin = (session?.user as any)?.role === 'admin';
-
-	async function handleSignOut() {
-		await goto('/api/auth/signout');
-	}
 
 	onMount(() => {
 		// Redirect authenticated users to chatbot UI

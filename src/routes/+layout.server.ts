@@ -7,7 +7,10 @@ export const load: LayoutServerLoad = async ({ locals }) => {
 	const session = await locals.getSession();
 	console.log('🔍 Layout server load - session result:', session);
 	console.log('🔍 Layout server load - session user:', session?.user);
-	console.log('🔍 Layout server load - session user role:', (session?.user as any)?.role);
+	console.log(
+		'🔍 Layout server load - session user role:',
+		(session?.user as { role?: string })?.role
+	);
 
 	return {
 		session

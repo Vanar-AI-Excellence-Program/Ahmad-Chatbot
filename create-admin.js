@@ -1,4 +1,3 @@
-import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import bcrypt from 'bcryptjs';
 import dotenv from 'dotenv';
@@ -12,7 +11,7 @@ if (!process.env.DATABASE_URL) {
 }
 
 const client = postgres(process.env.DATABASE_URL);
-const db = drizzle(client);
+// Database connection (not used in this script but kept for future use)
 
 async function createAdmin() {
 	try {
