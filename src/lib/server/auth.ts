@@ -12,6 +12,12 @@ import * as schema from '$lib/server/db/schema.js';
 import { eq, and } from 'drizzle-orm';
 import { env as privateEnv } from '$env/dynamic/private';
 
+// Type definitions for Auth.js callbacks - using any for Auth.js compatibility
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SignInParams = any;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SessionParams = any;
+
 export const authOptions = {
 	adapter: DrizzleAdapter(db),
 
@@ -98,13 +104,8 @@ export const authOptions = {
 	],
 
 	callbacks: {
-		async signIn({
-			account,
-			profile
-		}: {
-			account?: { provider: string };
-			profile?: { email?: string };
-		}) {
+		async signIn(params: SignInParams) {
+			const { account, profile } = params;
 			console.log('🔐 SignIn callback triggered:', {
 				account: account?.provider,
 				profile: profile?.email
@@ -129,6 +130,7 @@ export const authOptions = {
 
 			if (!existingUser) {
 				console.log('✅ New OAuth user, allowing sign in');
+				// New OAuth users will get default role from schema
 				return true;
 			}
 
@@ -153,13 +155,8 @@ export const authOptions = {
 			return true;
 		},
 
-		async session({
-			session,
-			user
-		}: {
-			session: { user?: { id?: string; email?: string; name?: string; role?: string } };
-			user?: { id?: string; email?: string; name?: string; role?: string };
-		}) {
+		async session(params: SessionParams) {
+			const { session, user } = params;
 			console.log('📋 Session callback triggered:', {
 				sessionUserId: session?.user?.id,
 				dbUserId: user?.id,
@@ -169,8 +166,8 @@ export const authOptions = {
 
 			if (session.user && user && user.id && user.email && user.name) {
 				session.user.id = String(user.id);
-				// Add role to session for RBAC
-				session.user.role = user.role;
+				// Add role to session for RBAC - ensure default role for OAuth users
+				session.user.role = user.role || 'user';
 				console.log('✅ Session updated with user data:', session.user);
 			} else {
 				console.log('⚠️ Session callback: missing user data', { session, user });

@@ -421,8 +421,8 @@
 						Cancel
 					</button>
 					<button
-						onclick={() => updateUserRole(selectedUser.id, newRole)}
-						disabled={loading || newRole === selectedUser.role}
+						onclick={() => selectedUser && updateUserRole(selectedUser.id, newRole)}
+						disabled={loading || !selectedUser || newRole === selectedUser.role}
 						class="rounded-md bg-indigo-600 px-4 py-2 text-white transition-colors hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50"
 					>
 						{loading ? 'Updating...' : 'Update Role'}
