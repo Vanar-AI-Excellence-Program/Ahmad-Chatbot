@@ -1,31 +1,47 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { env as privateEnv } from '$env/dynamic/private';
 
-if (!privateEnv.GEMINI_API_KEY) {
-	throw new Error(
-		'GEMINI_API_KEY is not set in environment variables. Please add it to your .env file.'
-	);
+// Initialize AI components only if API key is available
+let genAI: GoogleGenerativeAI | null = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let model: any = null;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+let fallbackModel: any = null;
+
+// Check if we're in a build environment (CI) or if API key is available
+const isBuildEnvironment = process.env.NODE_ENV === 'production' && !privateEnv.GEMINI_API_KEY;
+
+if (!isBuildEnvironment && privateEnv.GEMINI_API_KEY) {
+	// Validate API key format (should be a non-empty string)
+	if (
+		typeof privateEnv.GEMINI_API_KEY !== 'string' ||
+		privateEnv.GEMINI_API_KEY.trim().length === 0
+	) {
+		console.warn('⚠️ GEMINI_API_KEY is invalid. Please check your environment variables.');
+	} else {
+		try {
+			genAI = new GoogleGenerativeAI(privateEnv.GEMINI_API_KEY);
+			// Try the newer model first, fallback to older if needed
+			model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+			// Fallback model if the primary one fails
+			fallbackModel = genAI.getGenerativeModel({ model: 'gemini-pro' });
+			console.log('🔑 Gemini API key loaded successfully');
+		} catch (error) {
+			console.warn('⚠️ Failed to initialize Gemini AI:', error);
+		}
+	}
+} else if (isBuildEnvironment) {
+	console.log('🔧 Build environment detected - AI features will be disabled');
 }
-
-// Validate API key format (should be a non-empty string)
-if (
-	typeof privateEnv.GEMINI_API_KEY !== 'string' ||
-	privateEnv.GEMINI_API_KEY.trim().length === 0
-) {
-	throw new Error('GEMINI_API_KEY is invalid. Please check your environment variables.');
-}
-
-console.log('🔑 Gemini API key loaded successfully');
-
-export const genAI = new GoogleGenerativeAI(privateEnv.GEMINI_API_KEY);
-
-// Try the newer model first, fallback to older if needed
-export const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-// Fallback model if the primary one fails
-export const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-pro' });
 
 export async function generateResponse(prompt: string) {
+	// Check if AI is properly initialized
+	if (!model || !fallbackModel) {
+		throw new Error(
+			'AI service not initialized. Please check your GEMINI_API_KEY environment variable.'
+		);
+	}
+
 	try {
 		console.log('🤖 Generating AI response for prompt:', prompt.substring(0, 100) + '...');
 		const result = await model.generateContent(prompt);

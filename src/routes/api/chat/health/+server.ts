@@ -1,11 +1,11 @@
 import { json } from '@sveltejs/kit';
-import { genAI } from '$lib/server/ai.js';
+import { generateResponse } from '$lib/server/ai.js';
 import type { RequestHandler } from '@sveltejs/kit';
 
 export const GET: RequestHandler = async () => {
 	try {
-		// Test the API connection by trying to create a model instance
-		genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+		// Test the API connection by trying to generate a simple response
+		await generateResponse('Hello');
 
 		return json({
 			status: 'healthy',
