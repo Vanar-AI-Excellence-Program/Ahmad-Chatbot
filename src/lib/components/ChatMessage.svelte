@@ -7,9 +7,15 @@
 		content: string;
 		role: 'user' | 'assistant';
 		timestamp: Date;
+		isStreaming?: boolean;
 	};
 
 	let parsedContent = '';
+
+	// Reactive statement to update parsed content when message content changes
+	$: if (message.role === 'assistant' && message.content) {
+		parseMarkdownContent(message.content);
+	}
 
 	onMount(() => {
 		// Configure marked for security and proper rendering
@@ -18,35 +24,29 @@
 			gfm: true // GitHub Flavored Markdown
 		});
 
-		// Parse markdown content
-		if (message.role === 'assistant') {
-			try {
-				// Handle both sync and async versions of marked
-				const parseMarkdown = async () => {
-					const rawHtml = await marked(message.content);
-					// Basic sanitization - remove potentially dangerous attributes
-					parsedContent = rawHtml
-						.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-						.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-						.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
-						.replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
-						.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
-						.replace(/javascript:/gi, '')
-						.replace(/data:/gi, '');
-				};
-
-				parseMarkdown().catch((error) => {
-					console.error('Error parsing markdown:', error);
-					parsedContent = message.content; // Fallback to plain text
-				});
-			} catch (error) {
-				console.error('Error parsing markdown:', error);
-				parsedContent = message.content; // Fallback to plain text
-			}
-		} else {
-			parsedContent = message.content; // User messages remain as plain text
+		// Initial parsing
+		if (message.role === 'assistant' && message.content) {
+			parseMarkdownContent(message.content);
 		}
 	});
+
+	async function parseMarkdownContent(content: string) {
+		try {
+			const rawHtml = await marked(content);
+			// Basic sanitization - remove potentially dangerous attributes
+			parsedContent = rawHtml
+				.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+				.replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+				.replace(/<object\b[^<]*(?:(?!<\/object>)<[^<]*)*<\/object>/gi, '')
+				.replace(/<embed\b[^<]*(?:(?!<\/embed>)<[^<]*)*<\/embed>/gi, '')
+				.replace(/on\w+\s*=\s*["'][^"']*["']/gi, '')
+				.replace(/javascript:/gi, '')
+				.replace(/data:/gi, '');
+		} catch (error) {
+			console.error('Error parsing markdown:', error);
+			parsedContent = content; // Fallback to plain text
+		}
+	}
 
 	function formatTime(date: Date) {
 		return date.toLocaleTimeString('en-US', {
@@ -84,6 +84,13 @@
 					<div class="prose prose-sm max-w-none dark:prose-invert">
 						<!-- eslint-disable-next-line svelte/no-at-html-tags -->
 						{@html parsedContent}
+
+						<!-- Streaming indicator -->
+						{#if message.isStreaming}
+							<span
+								class="ml-1 inline-block h-5 w-2 animate-pulse rounded-sm bg-blue-500 dark:bg-blue-400"
+							></span>
+						{/if}
 					</div>
 				{:else}
 					<!-- Plain text for user messages -->
@@ -340,5 +347,20 @@
 	:global(.prose .task-list-item input[type='checkbox']) {
 		margin-right: 0.5em;
 		margin-top: 0.125em;
+	}
+
+	/* Streaming indicator animation */
+	@keyframes pulse {
+		0%,
+		100% {
+			opacity: 1;
+		}
+		50% {
+			opacity: 0.5;
+		}
+	}
+
+	.animate-pulse {
+		animation: pulse 1.5s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 	}
 </style>

@@ -5,6 +5,7 @@ export interface Message {
 	content: string;
 	role: 'user' | 'assistant';
 	timestamp: Date;
+	isStreaming?: boolean;
 }
 
 interface ChatState {
@@ -33,6 +34,20 @@ function createChatStore() {
 			update((state) => ({
 				...state,
 				messages: [...state.messages, message]
+			}));
+		},
+		updateStreamingMessage: (messageId: string, content: string, isComplete: boolean = false) => {
+			update((state) => ({
+				...state,
+				messages: state.messages.map((msg) =>
+					msg.id === messageId
+						? {
+								...msg,
+								content,
+								isStreaming: !isComplete
+							}
+						: msg
+				)
 			}));
 		},
 		setLoading: (loading: boolean) => {

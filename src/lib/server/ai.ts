@@ -90,3 +90,104 @@ export async function generateResponse(prompt: string) {
 		}
 	}
 }
+
+export async function* generateStreamingResponse(prompt: string) {
+	// Check if AI is properly initialized
+	if (!model || !fallbackModel) {
+		throw new Error(
+			'AI service not initialized. Please check your GEMINI_API_KEY environment variable.'
+		);
+	}
+
+	try {
+		console.log(
+			'🤖 Generating streaming AI response for prompt:',
+			prompt.substring(0, 100) + '...'
+		);
+
+		// Try primary model with streaming
+		try {
+			const result = await model.generateContentStream(prompt);
+			let fullText = '';
+
+			for await (const chunk of result.stream) {
+				const chunkText = chunk.text();
+				fullText += chunkText;
+				yield { text: chunkText, isComplete: false, model: 'gemini-1.5-flash' };
+			}
+
+			console.log(
+				'✅ Streaming AI response completed with gemini-1.5-flash, length:',
+				fullText.length
+			);
+			yield { text: '', isComplete: true, model: 'gemini-1.5-flash', fullText };
+			return;
+		} catch (streamingError) {
+			console.error('❌ Primary model streaming failed, trying non-streaming...', streamingError);
+
+			// Fallback to non-streaming primary model
+			const result = await model.generateContent(prompt);
+			const response = await result.response;
+			const text = response.text();
+
+			// Simulate streaming by yielding character by character
+			for (let i = 0; i < text.length; i++) {
+				yield { text: text[i], isComplete: false, model: 'gemini-1.5-flash' };
+				// Small delay to simulate streaming
+				await new Promise((resolve) => setTimeout(resolve, 10));
+			}
+
+			console.log(
+				'✅ AI response completed with gemini-1.5-flash (simulated streaming), length:',
+				text.length
+			);
+			yield { text: '', isComplete: true, model: 'gemini-1.5-flash', fullText: text };
+			return;
+		}
+	} catch (error: unknown) {
+		console.error('❌ Primary model failed, trying fallback...', error);
+
+		// Try fallback model
+		try {
+			console.log('🔄 Trying fallback model: gemini-pro');
+			const fallbackResult = await fallbackModel.generateContent(prompt);
+			const fallbackResponse = await fallbackResult.response;
+			const fallbackText = fallbackResponse.text();
+
+			// Simulate streaming by yielding character by character
+			for (let i = 0; i < fallbackText.length; i++) {
+				yield { text: fallbackText[i], isComplete: false, model: 'gemini-pro' };
+				// Small delay to simulate streaming
+				await new Promise((resolve) => setTimeout(resolve, 10));
+			}
+
+			console.log(
+				'✅ AI response completed with fallback model (simulated streaming), length:',
+				fallbackText.length
+			);
+			yield { text: '', isComplete: true, model: 'gemini-pro', fullText: fallbackText };
+			return;
+		} catch (fallbackError: unknown) {
+			console.error('❌ Both models failed:', fallbackError);
+
+			// Provide more specific error messages
+			const errorMessage = error instanceof Error ? error.message : String(error);
+			const fallbackErrorMessage =
+				fallbackError instanceof Error ? fallbackError.message : String(fallbackError);
+
+			if (errorMessage.includes('API key') || fallbackErrorMessage.includes('API key')) {
+				throw new Error(
+					'Invalid or missing Gemini API key. Please check your environment variables.'
+				);
+			} else if (errorMessage.includes('quota') || fallbackErrorMessage.includes('quota')) {
+				throw new Error('API quota exceeded. Please check your Gemini API usage limits.');
+			} else if (errorMessage.includes('model') || fallbackErrorMessage.includes('model')) {
+				throw new Error('Model not found or not supported. Please check the model name.');
+			} else {
+				throw new Error(
+					`Failed to generate AI response with both models. Primary: ${errorMessage}, Fallback: ${fallbackErrorMessage}`
+				);
+			}
+		}
+	}
+}

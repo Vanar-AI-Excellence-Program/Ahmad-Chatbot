@@ -23,6 +23,8 @@
 	async function sendMessage(messageContent: string) {
 		if (!messageContent.trim() || isLoading) return;
 
+		console.log('🚀 Starting to send message:', messageContent);
+
 		// Add user message
 		const userMessage = chatService.createUserMessage(messageContent);
 		chatStore.addMessage(userMessage);
@@ -30,15 +32,46 @@
 		chatStore.setLoading(true);
 
 		try {
-			// Get AI response
-			const response = await chatService.sendMessage(messageContent);
+			// Create an empty assistant message that will be updated with streaming content
+			const assistantMessageId = (Date.now() + 1).toString();
+			const emptyAssistantMessage = chatService.createAssistantMessage('');
+			emptyAssistantMessage.id = assistantMessageId;
+			emptyAssistantMessage.isStreaming = true;
+			chatStore.addMessage(emptyAssistantMessage);
 
-			// Add assistant message
-			const assistantMessage = chatService.createAssistantMessage(response);
-			chatStore.addMessage(assistantMessage);
+			console.log('📝 Created empty assistant message with ID:', assistantMessageId);
+
+			// Start streaming response
+			await chatService.sendStreamingMessage(messageContent, (chunk) => {
+				console.log('📡 Received chunk:', chunk);
+
+				if (chunk.type === 'chunk' && chunk.text) {
+					// Update the streaming message with new content
+					const currentMessage = $chatStore.messages.find((msg) => msg.id === assistantMessageId);
+					if (currentMessage) {
+						const newContent = currentMessage.content + chunk.text;
+						console.log('🔄 Updating message content:', newContent.substring(0, 50) + '...');
+						chatStore.updateStreamingMessage(assistantMessageId, newContent, false);
+					} else {
+						console.warn('⚠️ Could not find message with ID:', assistantMessageId);
+					}
+				} else if (chunk.type === 'complete') {
+					// Mark streaming as complete
+					const currentMessage = $chatStore.messages.find((msg) => msg.id === assistantMessageId);
+					if (currentMessage) {
+						console.log('✅ Marking streaming as complete');
+						chatStore.updateStreamingMessage(assistantMessageId, currentMessage.content, true);
+					}
+					console.log('✅ Streaming completed, model used:', chunk.model);
+				} else if (chunk.type === 'error') {
+					// Handle error
+					console.error('❌ Streaming error:', chunk.error);
+					chatStore.setError(chunk.error || 'Failed to get response. Please try again.');
+				}
+			});
 		} catch (err) {
+			console.error('❌ Chat error:', err);
 			chatStore.setError('Failed to get response. Please try again.');
-			console.error('Chat error:', err);
 		} finally {
 			chatStore.setLoading(false);
 		}
@@ -92,7 +125,7 @@
 						</span>
 					{:else}
 						<span
-							class="inline-flex items-center rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
+							class="inline-flex items-center rounded-full bg-yellow-100 px-3 py-1 text-xs font-medium text-yellow-800 dark:bg-green-900 dark:text-green-200"
 						>
 							Guest Mode
 						</span>
@@ -169,9 +202,11 @@
 						/>
 					</svg>
 				</div>
-				<h3 class="mb-2 text-lg font-semibold text-slate-900 dark:text-white">Fast & Responsive</h3>
+				<h3 class="mb-2 text-lg font-semibold text-slate-900 dark:text-white">
+					Real-time Streaming
+				</h3>
 				<p class="text-sm text-slate-600 dark:text-slate-400">
-					Get instant AI-powered responses with our optimized Gemini integration.
+					Watch AI responses appear in real-time with our advanced streaming technology.
 				</p>
 			</div>
 
