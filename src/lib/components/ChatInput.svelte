@@ -25,7 +25,7 @@
 				bind:value={inputMessage}
 				onkeypress={handleKeyPress}
 				placeholder="Type your message here..."
-				class="w-full resize-none rounded-xl border border-slate-300 px-4 py-3 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-white"
+				class="w-full resize-none rounded-xl border border-slate-300 px-4 py-3 text-slate-900 focus:border-transparent focus:ring-2 focus:ring-blue-500 dark:border-slate-600 dark:bg-slate-700 dark:text-slate-900"
 				rows="1"
 				disabled={isLoading}
 			></textarea>
